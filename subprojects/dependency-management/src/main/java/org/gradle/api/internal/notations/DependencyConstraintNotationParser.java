@@ -21,12 +21,13 @@ import org.gradle.api.internal.artifacts.dependencies.DefaultDependencyConstrain
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.typeconversion.NotationParser;
 import org.gradle.internal.typeconversion.NotationParserBuilder;
+import org.gradle.util.internal.SimpleMapInterner;
 
 public class DependencyConstraintNotationParser {
-    public static NotationParser<Object, DependencyConstraint> parser(Instantiator instantiator) {
+    public static NotationParser<Object, DependencyConstraint> parser(Instantiator instantiator, SimpleMapInterner stringInterner) {
         return NotationParserBuilder
             .toType(DependencyConstraint.class)
-            .fromCharSequence(new DependencyStringNotationConverter<DefaultDependencyConstraint>(instantiator, DefaultDependencyConstraint.class))
+            .fromCharSequence(new DependencyStringNotationConverter<DefaultDependencyConstraint>(instantiator, DefaultDependencyConstraint.class, stringInterner))
             .converter(new DependencyMapNotationConverter<DefaultDependencyConstraint>(instantiator, DefaultDependencyConstraint.class))
             .invalidNotationMessage("Comprehensive documentation on dependency notations is available in DSL reference for DependencyHandler type.")
             .toComposite();

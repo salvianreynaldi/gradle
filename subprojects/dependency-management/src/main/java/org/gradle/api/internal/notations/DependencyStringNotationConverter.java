@@ -25,14 +25,17 @@ import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.typeconversion.NotationConvertResult;
 import org.gradle.internal.typeconversion.NotationConverter;
 import org.gradle.internal.typeconversion.TypeConversionException;
+import org.gradle.util.internal.SimpleMapInterner;
 
 public class DependencyStringNotationConverter<T> implements NotationConverter<String, T> {
     private final Instantiator instantiator;
     private final Class<T> wantedType;
+    private final SimpleMapInterner stringInterner;
 
-    public DependencyStringNotationConverter(Instantiator instantiator, Class<T> wantedType) {
+    public DependencyStringNotationConverter(Instantiator instantiator, Class<T> wantedType, SimpleMapInterner stringInterner) {
         this.instantiator = instantiator;
         this.wantedType = wantedType;
+        this.stringInterner = stringInterner;
     }
 
     @Override
@@ -48,7 +51,7 @@ public class DependencyStringNotationConverter<T> implements NotationConverter<S
 
         ParsedModuleStringNotation parsedNotation = splitModuleFromExtension(notation);
         T moduleDependency = instantiator.newInstance(wantedType,
-            parsedNotation.getGroup(), parsedNotation.getName(), parsedNotation.getVersion());
+            stringInterner.intern(parsedNotation.getGroup()), stringInterner.intern(parsedNotation.getName()), stringInterner.intern(parsedNotation.getVersion()));
         if (moduleDependency instanceof ExternalDependency) {
             ModuleFactoryHelper.addExplicitArtifactsIfDefined((ExternalDependency) moduleDependency, parsedNotation.getArtifactType(), parsedNotation.getClassifier());
         }

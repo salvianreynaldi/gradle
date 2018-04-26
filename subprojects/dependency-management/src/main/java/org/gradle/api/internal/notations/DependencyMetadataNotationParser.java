@@ -20,12 +20,13 @@ import org.gradle.api.artifacts.DependencyMetadata;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.typeconversion.NotationParser;
 import org.gradle.internal.typeconversion.NotationParserBuilder;
+import org.gradle.util.internal.SimpleMapInterner;
 
 public class DependencyMetadataNotationParser {
-    public static <T extends DependencyMetadata> NotationParser<Object, T> parser(Instantiator instantiator, Class<T> implementationType) {
+    public static <T extends DependencyMetadata> NotationParser<Object, T> parser(Instantiator instantiator, Class<T> implementationType, SimpleMapInterner stringInterner) {
         return NotationParserBuilder
             .toType(implementationType)
-            .fromCharSequence(new DependencyStringNotationConverter<T>(instantiator, implementationType))
+            .fromCharSequence(new DependencyStringNotationConverter<T>(instantiator, implementationType, stringInterner))
             .converter(new DependencyMapNotationConverter<T>(instantiator, implementationType))
             .invalidNotationMessage("Comprehensive documentation on dependency notations is available in DSL reference for DependencyHandler type.")
             .toComposite();

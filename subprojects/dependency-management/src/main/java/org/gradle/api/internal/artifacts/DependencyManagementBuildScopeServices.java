@@ -108,6 +108,7 @@ import org.gradle.internal.resource.local.ivy.LocallyAvailableResourceFinderFact
 import org.gradle.internal.resource.transfer.DefaultUriTextResourceLoader;
 import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.util.BuildCommencedTimeProvider;
+import org.gradle.util.internal.SimpleMapInterner;
 import org.gradle.vcs.internal.VcsResolver;
 import org.gradle.vcs.internal.VcsWorkingDirectoryRoot;
 import org.gradle.vcs.internal.VersionControlSystemFactory;
@@ -129,24 +130,24 @@ class DependencyManagementBuildScopeServices {
     }
 
     DependencyFactory createDependencyFactory(
-            Instantiator instantiator,
-            ProjectAccessListener projectAccessListener,
-            StartParameter startParameter,
-            ClassPathRegistry classPathRegistry,
-            CurrentGradleInstallation currentGradleInstallation,
-            FileLookup fileLookup,
-            RuntimeShadedJarFactory runtimeShadedJarFactory,
-            ImmutableAttributesFactory attributesFactory
-    ) {
+        Instantiator instantiator,
+        ProjectAccessListener projectAccessListener,
+        StartParameter startParameter,
+        ClassPathRegistry classPathRegistry,
+        CurrentGradleInstallation currentGradleInstallation,
+        FileLookup fileLookup,
+        RuntimeShadedJarFactory runtimeShadedJarFactory,
+        ImmutableAttributesFactory attributesFactory,
+        SimpleMapInterner stringInterner) {
         DefaultProjectDependencyFactory factory = new DefaultProjectDependencyFactory(
             projectAccessListener, instantiator, startParameter.isBuildProjectDependencies());
 
         ProjectDependencyFactory projectDependencyFactory = new ProjectDependencyFactory(factory);
 
         return new DefaultDependencyFactory(
-            DependencyNotationParser.parser(instantiator, factory, classPathRegistry, fileLookup, runtimeShadedJarFactory, currentGradleInstallation),
-            DependencyConstraintNotationParser.parser(instantiator),
-            new ClientModuleNotationParserFactory(instantiator).create(),
+            DependencyNotationParser.parser(instantiator, factory, classPathRegistry, fileLookup, runtimeShadedJarFactory, currentGradleInstallation, stringInterner),
+            DependencyConstraintNotationParser.parser(instantiator, stringInterner),
+            new ClientModuleNotationParserFactory(instantiator, stringInterner).create(),
             projectDependencyFactory,
             attributesFactory);
     }
@@ -373,5 +374,9 @@ class DependencyManagementBuildScopeServices {
 
     ResolverProviderFactory createVcsResolverProviderFactory(VcsDependencyResolver vcsDependencyResolver, ProjectDependencyResolver projectDependencyResolver, VcsResolver vcsResolver) {
         return new VcsOrProjectResolverProviderFactory(vcsDependencyResolver, projectDependencyResolver, vcsResolver);
+    }
+
+    SimpleMapInterner createStringInterner() {
+        return SimpleMapInterner.threadSafe();
     }
 }

@@ -21,18 +21,21 @@ import org.gradle.internal.Factory;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.internal.typeconversion.NotationParser;
 import org.gradle.internal.typeconversion.NotationParserBuilder;
+import org.gradle.util.internal.SimpleMapInterner;
 
 public class ClientModuleNotationParserFactory implements Factory<NotationParser<Object, ClientModule>> {
 
     private final Instantiator instantiator;
+    private final SimpleMapInterner stringInterner;
 
-    public ClientModuleNotationParserFactory(Instantiator instantiator) {
+    public ClientModuleNotationParserFactory(Instantiator instantiator, SimpleMapInterner stringInterner) {
         this.instantiator = instantiator;
+        this.stringInterner = stringInterner;
     }
 
     public NotationParser<Object, ClientModule> create() {
         return NotationParserBuilder.toType(ClientModule.class)
-                .fromCharSequence(new DependencyStringNotationConverter<DefaultClientModule>(instantiator, DefaultClientModule.class))
+                .fromCharSequence(new DependencyStringNotationConverter<DefaultClientModule>(instantiator, DefaultClientModule.class, stringInterner))
                 .converter(new DependencyMapNotationConverter<DefaultClientModule>(instantiator, DefaultClientModule.class))
                 .toComposite();
 
