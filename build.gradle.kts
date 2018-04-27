@@ -69,7 +69,6 @@ buildTypes {
     // Tests not using the daemon mode
     create("noDaemonTest") {
         tasks("noDaemonIntegTest")
-        projectProperties("useAllDistribution" to true)
     }
 
     // Run the integration tests using the parallel executer
