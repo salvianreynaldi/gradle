@@ -198,12 +198,14 @@ public class DefaultGradleLauncherFactory implements GradleLauncherFactory {
             servicesToStop
         );
         nestedBuildFactory.setParent(gradleLauncher);
+        nestedBuildFactory.setBuildCancellationToken(cancellationToken);
         return gradleLauncher;
     }
 
     private class NestedBuildFactoryImpl implements NestedBuildFactory {
         private final BuildTreeScopeServices buildTreeScopeServices;
         private DefaultGradleLauncher parent;
+        private BuildCancellationToken buildCancellationToken;
 
         public NestedBuildFactoryImpl(BuildTreeScopeServices buildTreeScopeServices) {
             this.buildTreeScopeServices = buildTreeScopeServices;
@@ -219,7 +221,7 @@ public class DefaultGradleLauncherFactory implements GradleLauncherFactory {
             StartParameter startParameter = buildDefinition.getStartParameter();
             final ServiceRegistry userHomeServices = userHomeDirServiceRegistry.getServicesFor(startParameter.getGradleUserHomeDir());
             BuildRequestMetaData buildRequestMetaData = new DefaultBuildRequestMetaData(Time.currentTimeMillis());
-            BuildSessionScopeServices sessionScopeServices = new BuildSessionScopeServices(userHomeServices, crossBuildSessionScopeServices, startParameter, buildRequestMetaData, ClassPath.EMPTY);
+            BuildSessionScopeServices sessionScopeServices = new BuildSessionScopeServices(userHomeServices, crossBuildSessionScopeServices, startParameter, buildRequestMetaData, ClassPath.EMPTY, buildCancellationToken);
             BuildTreeScopeServices buildTreeScopeServices = new BuildTreeScopeServices(sessionScopeServices);
             GradleLauncher childInstance = createChildInstance(buildDefinition, buildIdentifier, parent, buildTreeScopeServices, ImmutableList.of(buildTreeScopeServices, sessionScopeServices, new Stoppable() {
                 @Override
@@ -231,8 +233,12 @@ public class DefaultGradleLauncherFactory implements GradleLauncherFactory {
             return new NestedBuildController(new GradleBuildController(childInstance));
         }
 
-        public void setParent(DefaultGradleLauncher parent) {
+        private void setParent(DefaultGradleLauncher parent) {
             this.parent = parent;
+        }
+
+        private void setBuildCancellationToken(BuildCancellationToken buildCancellationToken) {
+            this.buildCancellationToken = buildCancellationToken;
         }
 
         private class NestedBuildController implements BuildController {
